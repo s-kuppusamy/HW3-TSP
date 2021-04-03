@@ -10,6 +10,7 @@ Please don't look at it unless you are absolutely stuck, even after hours!
 
 # Import math.
 import math
+from itertools import permutations
 ################################################################################
 
 """
@@ -404,14 +405,38 @@ class Map:
                     self.mst.append(e)
         return
 
+    def dfsSearch(node,tour):
+        node.visited = False
+        tour.append(node)
+        if len(node.mstN) > 0:
+            for neighbor in node.mstN:
+                if neighbor.visited == True:
+                    Map.dfsSearch(neighbor,tour)
+        return tour
+
     """
     getTSPApprox: uses the MST to find the approximate solution to TSP.
     """
     def getTSPApprox(self):
+        # Complete the TSP Approximation method here
+        # Update the Map object with the TSP Approximate tour
+
+        #make sure an MST is set
         if len(self.mst) > 0:
-            ### TODO ###
-            # Complete the TSP Approximation method here
-            # Update the Map object with the TSP Approximate tour
+
+            #traverse the tree with the new edges using DFS from the start node 
+            #creating an array of vertices in order traversed
+
+            #general algorithm: consider a particular node, mark it as visited, visit all neighbors until none left, 
+            #then repeat with next unvisited node. Begin at the root node.
+            path = Map.dfsSearch(self.start,[])
+
+            #save the rank of the node into tour and close the loop to the start to complete the cycle
+            tour = []
+            for node in path:
+                tour.append(node.rank)
+            tour.append(path[0].rank)
+            self.tour = tour
         else:
             raise Exception('No MST set!')
         return
@@ -422,8 +447,31 @@ class Map:
     def getTSPOptimal(self):
         ### TODO ###
         # Complete a brute-force TSP solution!
-        # Replace the following two lines with an actual implementation.
-        self.tourOpt = getMap(self.mapNum)[3]
+        # Replace the following two lines with an actual implementation
+
+        #the brute force method entails trying all possible permutations of the tour that begins with the start node 
+        #and seeing which one has lowest minimum cost.
+        min_cost = math.inf
+        path = []
+        for p in permutations(self.adjList):
+            p = list(p)
+            #check if it starts with the start node
+            if p[0] == self.start:
+                #complete the cycle
+                p.append(p[0])
+                cost = 0
+                #calculate cost of the path
+                for node in p:
+                    cost += node.cost
+                #rest min_cost and path if is the smallest so far
+                if cost < min_cost:
+                    min_cost = cost
+                    path = p
+        #converts to ranks rather than vertices
+        tour = []
+        for node in path:
+            tour.append(node.rank)
+        self.tourOpt = tour
         return None
 
     """
@@ -681,6 +729,8 @@ def testMSTApprox():
     Tpass = 0
     Mflag = False
     Tflag = False
+    flag_right = False
+    flag_left = False
     t = 9
     tol = 1e-6
 
